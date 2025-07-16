@@ -1,3 +1,6 @@
+# NOTE:
+Most Of The Free Hosting Server Like Koyeb,Render Is Banned By Animepahe[Cause Of 404 Error] ..So Must Use VPS Like Server For Hosting This Bot
+
 # AnimePaheBot
 
 ![AnimePaheBot](https://envs.sh/aWO.jpg)
