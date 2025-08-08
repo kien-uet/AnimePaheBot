@@ -4,6 +4,7 @@ pyrogram
 bs4==0.0.2
 #...For Handling Requests...#
 requests==2.31.0
+cloudscraper
 #...For Database...#
 pymongo
 #...For Enhancing Bot Performance...#
