@@ -5,7 +5,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from plugins.queue import add_to_queue, remove_from_queue
-from plugins.kwik import extract_kwik_link
 from plugins.direct_link import get_dl_link
 from plugins.headers import*
 from plugins.file import*
@@ -210,10 +209,9 @@ def change_upload_method(client, callback_query):
 @Client.on_callback_query(filters.regex(r"^dl_"))
 def download_and_upload_file(client, callback_query):
     download_url = callback_query.data.split("dl_")[1]
-    kwik_link = extract_kwik_link(download_url)
-
+    
     try:
-        direct_link = get_dl_link(kwik_link)
+        direct_link = get_dl_link(download_url)
     except Exception as e:
         callback_query.message.reply_text(f"Error generating download link: {str(e)}")
         return
