@@ -13,5 +13,5 @@ COPY . /app
 RUN rm -f *.session *.session-journal
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["bash", "web.sh"] # For web service 
-#CMD ["bash", "start.sh"] # For worker
+CMD ["python3", "main.py"] 
+#CMD ["bash", "start.sh"]
