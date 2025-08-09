@@ -12,6 +12,8 @@ from helper.database import*
 import subprocess
 import json
 from config import LOG_CHANNEL
+import cloudscraper
+
 def create_short_name(name):
     # Check if the name length is greater than 25
     if len(name) > 30:
@@ -56,14 +58,32 @@ def get_media_details(path):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
-def download_file(url, download_path):
+'''def download_file(url, download_path):
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
         with open(download_path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
-    return download_path
+    return download_path'''
 
+def download_file(url, download_path):
+    # Create a CloudScraper instance to bypass Cloudflare
+    scraper = cloudscraper.create_scraper()
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Referer': 'https://kwik.cx/',
+        'Accept': 'video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5'
+    }
+    
+    # Use the scraper instead of requests.get
+    with scraper.get(url, headers=headers, stream=True) as r:
+        r.raise_for_status()
+        with open(download_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+    return download_path
+    
 def sanitize_filename(file_name):
     # Remove invalid characters from the file name
     file_name = re.sub(r'[<>:"/\\|?*]', '', file_name)
