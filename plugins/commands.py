@@ -24,7 +24,7 @@ def start(client, message):
         try:
             add_user(id)
         except Exception as e:
-            client.send_message(-1002457905787, f"{e}")
+            client.send_message(-1003193855872, f"{e}")
             pass
     start_pic = random.choice(START_PIC)
     
@@ -142,7 +142,7 @@ def search_anime(client, message):
         try:
             add_user(id)
         except Exception as e:
-            client.send_message(-1002457905787, f"{e}")
+            client.send_message(-1003193855872, f"{e}")
             pass
     try:
         query = message.text.split("/anime ", maxsplit=1)[1]
@@ -281,7 +281,7 @@ def send_latest_anime(client, message):
             message.reply_text(f"Failed to fetch data from the API. Status code: {response.status_code}")
     
     except Exception as e:
-        client.send_message(-1002457905787, f"Error: {e}")
+        client.send_message(-1003193855872, f"Error: {e}")
         message.reply_text("Something went wrong. Please try again later.")
 
 
@@ -317,7 +317,7 @@ def send_latest_anime(client, message):
 
     except Exception as e:
         # Log the error and notify the user
-        #client.send_message(-1002457905787, f"Error: {e}")
+        #client.send_message(-1003193855872, f"Error: {e}")
         message.reply_text("Something went wrong. Please try again later.")
 
         
