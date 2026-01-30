@@ -46,6 +46,21 @@ async def start(client, message: Message):
     )
 
 async def download_video(client, message: Message, url: str, audio=False, format_id="bestvideo+bestaudio/best"):
+    """
+    Download and send a video from a URL to Telegram.
+    
+    Args:
+        client: Telegram client instance
+        message: Message object from user
+        url: Video URL to download
+        audio: If True, extract audio only; if False, download video (default: False)
+        format_id: yt-dlp format specification (default: "bestvideo+bestaudio/best")
+                   Changed from "mp4" to ensure proper audio/video merging for TVer and other streaming services
+    
+    The format "bestvideo+bestaudio/best" ensures both audio and video streams are downloaded
+    and merged properly, which is critical for streaming services like TVer that serve
+    separate audio/video streams.
+    """
     url_info = urlparse(url)
     if not url_info.scheme:
         await message.reply('Invalid URL')
@@ -65,12 +80,14 @@ async def download_video(client, message: Message, url: str, audio=False, format
             try:
                 current_time = time.time()
                 if current_time - last_update['time'] >= 5:
-                    perc = round(d.get('downloaded_bytes', 0) * 100 / d.get('total_bytes', 1))
-                    asyncio.create_task(
-                        status_msg.edit(f"Downloading {d['info_dict'].get('title', 'video')}\n\n{perc}%")
-                    )
-                    last_update['time'] = current_time
-            except:
+                    total = d.get('total_bytes', 0)
+                    if total > 0:
+                        percentage = round(d.get('downloaded_bytes', 0) * 100 / total)
+                        asyncio.create_task(
+                            status_msg.edit(f"Downloading {d['info_dict'].get('title', 'video')}\n\n{percentage}%")
+                        )
+                        last_update['time'] = current_time
+            except Exception:
                 pass
 
     ydl_opts = {
@@ -103,18 +120,21 @@ async def download_video(client, message: Message, url: str, audio=False, format
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
+            # Validate that download was successful and has required data
+            if not info or 'requested_downloads' not in info or not info['requested_downloads']:
+                raise yt_dlp.utils.DownloadError('Download failed: No file information available')
             filepath = info['requested_downloads'][0]['filepath']
             
         await status_msg.edit('Sending file to Telegram...')
 
         last_upload_update = {'perc': 0}
         async def upload_progress(current, total):
-            perc = round(current * 100 / total)
-            if perc >= last_upload_update['perc'] + 5:
+            percentage = round(current * 100 / total)
+            if percentage >= last_upload_update['perc'] + 5:
                 try:
-                    await status_msg.edit(f'Uploading to Telegram... {perc}%')
-                    last_upload_update['perc'] = perc
-                except:
+                    await status_msg.edit(f'Uploading to Telegram... {percentage}%')
+                    last_upload_update['perc'] = percentage
+                except Exception:
                     pass
 
         if audio:
@@ -132,13 +152,14 @@ async def download_video(client, message: Message, url: str, audio=False, format
             thumb_path = None
             try:
                 thumb_path = f'{config.output_folder}/{video_title}.jpg'
-                proc = await asyncio.create_subprocess_shell(
-                    f'ffmpeg -i "{filepath}" -ss 00:00:01.000 -vframes 1 "{thumb_path}"',
+                # Using subprocess.create_subprocess_exec for security instead of shell=True
+                proc = await asyncio.create_subprocess_exec(
+                    'ffmpeg', '-i', filepath, '-ss', '00:00:01.000', '-vframes', '1', thumb_path,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE
                 )
                 await proc.communicate()
-            except:
+            except Exception:
                 thumb_path = None
 
             await client.send_video(
@@ -157,24 +178,27 @@ async def download_video(client, message: Message, url: str, audio=False, format
 
         await status_msg.delete()
         
-    except yt_dlp.utils.DownloadError:
-        await status_msg.edit('Invalid URL or download failed')
+    except yt_dlp.utils.DownloadError as e:
+        await status_msg.edit(f'Invalid URL or download failed: {str(e)[:100]}')
     except Exception as e:
         print_exc()
-        await status_msg.edit(f'Error: {str(e)[:100]}')
+        error_msg = str(e)
+        if len(error_msg) > 100:
+            error_msg = error_msg[:97] + '...'
+        await status_msg.edit(f'Error: {error_msg}')
     finally:
         for file in os.listdir(config.output_folder):
             if file.startswith(str(video_title)):
                 try:
                     os.remove(f'{config.output_folder}/{file}')
-                except:
+                except Exception:
                     pass
 
 @app.on_message(filters.command('download'))
 async def download_command(client, message: Message):
     try:
         url = message.text.split(' ', 1)[1]
-    except:
+    except IndexError:
         await message.reply('Invalid usage, use `/download url`')
         return
     await download_video(client, message, url)
@@ -183,7 +207,7 @@ async def download_command(client, message: Message):
 async def audio_command(client, message: Message):
     try:
         url = message.text.split(' ', 1)[1]
-    except:
+    except IndexError:
         await message.reply('Invalid usage, use `/audio url`')
         return
     await download_video(client, message, url, audio=True)

@@ -4,13 +4,13 @@
 import os
 
 # Telegram API credentials
-api_id = os.environ.get("API_ID", 1234567)
+api_id = int(os.environ.get("API_ID", "1234567"))
 api_hash = os.environ.get("API_HASH", "")
 bot_token = os.environ.get("BOT_TOKEN", "")
 
 # Download settings
 output_folder = os.environ.get("DOWNLOAD_DIR", "./downloads")
-max_filesize = os.environ.get("MAX_FILESIZE", 2147483648)  # 2GB default
+max_filesize = int(os.environ.get("MAX_FILESIZE", "2147483648"))  # 2GB default
 
 # Optional: Proxy settings
 proxy = os.environ.get("PROXY", None)
