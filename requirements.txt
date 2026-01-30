@@ -11,6 +11,8 @@ pymongo
 tgcrypto
 #...For Grabbing Episode Information...#
 ffprobe
+#...For Video Downloads...#
+yt-dlp>=2024.07.01
 #...For Web App (Remove Bellow 2 Requirements If You Deploy It As Worker)...#
 flask # Only if you deploy it as web service 
 gunicorn # Only if you deploy it as web service 
